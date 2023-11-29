@@ -17,7 +17,7 @@ variables:
   vmImageName: 'ubuntu-latest'
 
   # Working Directory
-  workingDirectory: 'workingdir1'
+  workingDirectory: '/'
 
 stages:
 - stage: Build
