@@ -14,7 +14,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 bot = telebot.TeleBot(os.getenv("TELEGRAM_BOT_TOKEN"))
 
 conversation_history = []
-prompt = "Отвечай как старый айтишник, на русском языке: "
+prompt = "Отвечай как специалист в этой области, на русском языке: "
 conversation_history.append({"role": "user", "content": prompt})
 
 @bot.message_handler(commands=['start'])
