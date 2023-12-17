@@ -5,17 +5,48 @@ import os
 import openai
 from dotenv import load_dotenv
 import telebot
+from azure.functions import HttpRequest, HttpResponse
+import requests
+
+
 
 load_dotenv()  # take environment variables from .env.
 openai.api_type = "azure"
 openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
 openai.api_version = "2023-07-01-preview"
 openai.api_key = os.getenv("OPENAI_API_KEY")
+bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = telebot.TeleBot(os.getenv("TELEGRAM_BOT_TOKEN"))
+function_url = os.getenv("FUNCTION_URL")
+
+
+# Construct the webhook URL
+
+webhook_url = f'https://api.telegram.org/bot{bot_token}/setWebhook?url={function_url}'
+print('Setting the webhook URL to', webhook_url)
+
+# Make the request
+response = requests.get(webhook_url)
+
+# Check the response
+if response.status_code == 200:
+    print('Webhook set successfully.')
+else:
+    print('Failed to set webhook:', response.content)
+
 
 conversation_history = []
 prompt = "Отвечай как специалист в этой области, на русском языке: "
 conversation_history.append({"role": "user", "content": prompt})
+
+def main(req: HttpRequest) -> HttpResponse:
+    if req.method == 'POST':
+        json_string = req.get_json()
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return HttpResponse(status_code=200)
+    else:
+        return HttpResponse("This is a bot server.", status_code=200)
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -52,5 +83,4 @@ def get_response(conversation_history):
     text = response['choices'][0]['message']['content']
     return text
 
-
-bot.polling()
+#bot.polling()
