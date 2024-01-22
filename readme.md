@@ -1,23 +1,11 @@
 #### From Source
-1. Create a virtual environment:
-```shell
-python3 -m venv venv_bot   
-```
 
-2. Activate the virtual environment:
-```shell
-# For Linux or macOS:
-source venv/bin/activate
-
-# For Windows:
-venv_bot\Scripts\activate
-```
-
-3. Install the dependencies using `requirements.txt` file:
-```shell
-pip install -r requirements.txt
-```
-
-4. Use the following command to start the bot:
-```
-python TheBot.py
+Function:
+    Deploy tools to test localy
+    func start --useHttps --cert .\server.pfx --password 1111 --port 7443
+    Use ngrok.com to create https tunnel in terminal: ngrok http https://localhost:7443             
+    update localsettings.json with URL
+    locally set webhook https://localhost:7443/api/Bot_1_General
+    check webhook
+        https://api.telegram.org/bot{bot-token is .env}}/getWebhookInfo
+    
