@@ -11,11 +11,13 @@ import re
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-@app.route(route="Bot_1_General")
-def Bot_1_General(req: func.HttpRequest) -> func.HttpResponse:
+##@app.route(route="Bot_1_General") For local testing
+@app.route(route="http_trigger", auth_level=func.AuthLevel.ANONYMOUS)
+#def Bot_1_General(req: func.HttpRequest) -> func.HttpResponse: for local testing
+def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    function_url = os.getenv("FUNCTION_URL")
-    set_telegram_webhook(bot_token, function_url)
+#    function_url = os.getenv("FUNCTION_URL") for local testing
+#    set_telegram_webhook(bot_token, function_url)    set manually, using info in .env file
 
     if req.method == 'POST':    
         update = req.get_json()
@@ -33,14 +35,10 @@ def Bot_1_General(req: func.HttpRequest) -> func.HttpResponse:
                 fileprefix = f'{username}_{user_id}'
                 logging.log(logging.INFO, f'User {username} with id {user_id} sent a message: {update["message"]["text"]}')
                 
-                
-                if update['message']['text'] == '/english':
-                    message_english(chat_id, bot_token, fileprefix)
                     
-                elif update['message']['text'] == '/startover':
+                if update['message']['text'] == '/startover':
                     message_startover(chat_id, bot_token, fileprefix)
         
-
                 message_next(chat_id, bot_token,update['message']['text'], fileprefix)
                 logging.info(f'Update has a message = {update["message"]["text"]}')
                 return func.HttpResponse(status_code=200)
