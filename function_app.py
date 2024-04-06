@@ -13,9 +13,7 @@ from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-##@app.route(route="Bot_1_General") For local testing
 @app.route(route="http_trigger", auth_level=func.AuthLevel.ANONYMOUS)
-#def Bot_1_General(req: func.HttpRequest) -> func.HttpResponse: for local testing
 def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
 #    function_url = os.getenv("FUNCTION_URL") for local testing
@@ -52,16 +50,6 @@ def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("This is a bot server.", status_code=200)
     
 
-
-
-#This should be set once per function
-def set_telegram_webhook(bot_token, function_url):
-    set_webhook_url = f"https://api.telegram.org/bot{bot_token}/setWebhook?url={function_url}"
-    logging.info(f'Setting the webhook URL to {set_webhook_url}')
-    response = requests.post(set_webhook_url)
-    return response.json()
-
-
 def message_next(chat_id, bot_token, text, fileprefix,blob_client):
         logging.info(f'Update has a next message = {text}, fileprefix: {fileprefix}')
         bot = TeleBot(bot_token)
@@ -97,35 +85,6 @@ def message_next(chat_id, bot_token, text, fileprefix,blob_client):
         conversation = [json.dumps(message) for message in conversation]
         conversation = "\n".join(conversation)
         blob_client.upload_blob(conversation, overwrite=True)
-
-# commented out for local testing
-        # if not os.path.exists(f'{fileprefix}_prompt.txt'):
-        #      logging.info(f'Prompt file does not exist. Creating a new one. {fileprefix}_prompt.txt')
-        #      shutil.copyfile('prompt_cocktails.txt', f'{fileprefix}_prompt.txt')
-    
-        # #open history file and add current message
-        # with open(f'{fileprefix}_history.txt', 'a') as f:
-        #         f.write(json.dumps({"role": "user", "content": text}) + '\n')
-
-        # #construct conversation history as prompt+history and pass to openai
-
-        # conversation = []
-        
-        # with open(f'{fileprefix}_history.txt', 'r') as f:
-        #         for line in f:
-        #             conversation.append(json.loads(line))
-
-        # with open(f'{fileprefix}_prompt.txt', 'r') as f:
-        #         conversation.append({"role": "system", "content": f.read().strip()})
-
-        # # Limit the conversation history to the last 10 messages
-        # conversation = conversation[-25:]
-        # response = get_response(conversation)
-        # bot.send_message(chat_id, response)
-
-        # #add response to history file
-        # with open(f'{fileprefix}_history.txt', 'a') as f:
-        #     f.write(json.dumps({"role": "assistant", "content": response}) + '\n') 
         
         cocktailname = re.findall(r'\*\*(.*?)\*\*', response)
         cocktailname = cocktailname[0] if cocktailname else None
@@ -140,14 +99,12 @@ def message_next(chat_id, bot_token, text, fileprefix,blob_client):
 
             result = client.images.generate(
                 model="dalle3", # the name of your DALL-E 3 deployment
-                prompt=f'5 Amusingly tipsy laboratory cartoon cats, donned in lab coats, gaze curiously and happily at the cocktail {cocktailname} they just invented, but refrain from touching it. The cocktail is depicted with remarkable realism, accurately showcasing its usual ingredients and garnishes. The glass mirrors the typical vessel used for this cocktail. Importantly, it refrains from portraying a milky appearance if the cocktail does not traditionally contain milk or cream',
+                prompt=f'''5 Amusingly tipsy laboratory cartoon rats, donned in lab coats, gaze curiously and happily at the cocktail {cocktailname} they just invented, but refrain from touching it. 
+                The cocktail is depicted with remarkable realism, accurately showcasing its usual ingredients and garnishes. 
+                The glass mirrors the typical vessel used for this cocktail. 
+                Importantly, it refrains from portraying a milky appearance if the cocktail does not traditionally contain milk or cream. Oil painting style. Romanticism.''',
                 n=1)
             
-                #prompt=f'''Create 5 Amusingly tipsy lab rats, gaze curiously and happily at the cocktail {cocktailname} they just invented, 
-                #but refrain from touching it. The cocktail is depicted with remarkable realism, accurately showcasing its usual ingredients and garnishes. 
-                #The glass mirrors the typical vessel used for this cocktail. 
-                #The cocktail is clean if the ingredients usually do not include milk or cream. Oil painting style. Romanticism.''',
-                #n=1)
             
             image_url = json.loads(result.model_dump_json())['data'][0]['url']
             bot.send_photo(chat_id, image_url)
